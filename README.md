@@ -212,7 +212,7 @@ The IdP widget provides a complete authentication UI that can be easily integrat
    ```
 
 2. **Configure the widget:**
-   ```javascript
+   ```html
    <script>
       // Configure the IdP Widget
       window.idpWidgetConfig = {
