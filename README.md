@@ -1,15 +1,23 @@
-# Identity Provider (IdP) - Spring Boot Backend
+# Identity Provider (IdP) - Complete Authentication Solution
 
-A comprehensive Spring Boot-based Identity Provider that supports email/password authentication, LinkedIn OAuth2, and JWT token management with public key distribution.
+A comprehensive Identity Provider solution featuring a Spring Boot backend and JavaScript widget for seamless authentication integration. Supports email/password authentication, LinkedIn & Google OAuth2, JWT token management, and provides a ready-to-use widget for client applications.
 
 ## Features
 
 ### Core Authentication
-- **Email/Password Registration** with mandatory email verification
-- **LinkedIn OAuth2 Integration** for social login
+- **Email/Password Registration** with client-side and server-side validation
+- **LinkedIn & Google OAuth2 Integration** for social login
 - **JWT Token Management** with RSA-256 signing
 - **Refresh Token Support** for seamless session management
 - **Public Key Distribution** via JWKS endpoint
+
+### IdP Widget
+- **Ready-to-use JavaScript Widget** for easy integration
+- **Responsive Design** with modern UI/UX
+- **Real-time Validation** with field-specific error handling
+- **Success/Error Feedback** with visual indicators
+- **OAuth2 Popup Flow** for social authentication
+- **Customizable Styling** and configuration
 
 ### Security Features
 - **Rate Limiting** on login attempts
@@ -32,6 +40,8 @@ A comprehensive Spring Boot-based Identity Provider that supports email/password
 #### OAuth2 Endpoints
 - `GET /api/oauth2/linkedin/authorize` - Get LinkedIn auth URL
 - `POST /api/oauth2/linkedin/callback` - LinkedIn OAuth callback
+- `GET /api/oauth2/google/auth` - Get Google auth URL
+- `POST /api/oauth2/google/callback` - Google OAuth callback
 
 #### Public Endpoints
 - `GET /.well-known/jwks.json` - Public keys for JWT verification
@@ -54,8 +64,14 @@ A comprehensive Spring Boot-based Identity Provider that supports email/password
 
 2. **Configure application:**
    ```bash
-   # Update src/main/resources/application.properties
-   # Set your database credentials, email settings, and OAuth2 keys
+   # Copy the example configuration
+   cp src/main/resources/application-exemplee.properties src/main/resources/application.properties
+   
+   # Update application.properties with your actual credentials:
+   # - Database connection details
+   # - Email SMTP settings
+   # - LinkedIn OAuth2 credentials
+   # - Google OAuth2 credentials
    ```
 
 3. **Run the application:**
@@ -63,13 +79,16 @@ A comprehensive Spring Boot-based Identity Provider that supports email/password
    ./mvnw spring-boot:run
    ```
 
-4. **Test the endpoints:**
+4. **Test the application:**
    ```bash
    # Health check
    curl http://localhost:8080/health
    
    # Get public keys
    curl http://localhost:8080/.well-known/jwks.json
+   
+   # Access the IdP widget demo
+   open http://localhost:8080/idp-widget/index.html
    ```
 
 ### Docker Deployment
@@ -99,14 +118,27 @@ A comprehensive Spring Boot-based Identity Provider that supports email/password
 
 ### OAuth2 Configuration
 
-Update the following in `application.properties`:
+The application supports both LinkedIn and Google OAuth2. Update the following in `application.properties`:
 
 ```properties
-# LinkedIn OAuth2
-spring.security.oauth2.client.registration.linkedin.client-id=YOUR_CLIENT_ID
-spring.security.oauth2.client.registration.linkedin.client-secret=YOUR_CLIENT_SECRET
-spring.security.oauth2.client.registration.linkedin.redirect-uri=http://localhost:8080/api/oauth2/linkedin/callback
+# LinkedIn OAuth2 Configuration
+oauth2.linkedin.client-id=YOUR_LINKEDIN_CLIENT_ID
+oauth2.linkedin.client-secret=YOUR_LINKEDIN_CLIENT_SECRET
+oauth2.linkedin.redirect-uri=http://localhost:8080/api/oauth2/linkedin/callback
+
+# Google OAuth2 Configuration (Manual - for custom flow)
+oauth2.google.client-id=YOUR_GOOGLE_CLIENT_ID
+oauth2.google.client-secret=YOUR_GOOGLE_CLIENT_SECRET
+oauth2.google.redirect-uri=http://localhost:8080/api/oauth2/google/callback
+
+# Spring Security OAuth2 Client Configuration (Automatic - for Spring Security)
+spring.security.oauth2.client.registration.google.client-id=YOUR_GOOGLE_CLIENT_ID
+spring.security.oauth2.client.registration.google.client-secret=YOUR_GOOGLE_CLIENT_SECRET
+spring.security.oauth2.client.registration.google.scope=openid,profile,email
+spring.security.oauth2.client.registration.google.redirect-uri=http://localhost:8080/login/oauth2/code/google
 ```
+
+**Note:** The application uses a client ID mapping system. Your widget's client ID (e.g., `my-application-9f03ce9f`) is mapped to the actual OAuth2 provider credentials in the backend.
 
 ## Database Schema
 
@@ -160,6 +192,66 @@ Default OAuth2 client:
 }
 ```
 
+## IdP Widget Integration
+
+### Quick Integration
+
+The IdP widget provides a complete authentication UI that can be easily integrated into any web application.
+
+1. **Include the widget files:**
+   ```html
+   <!DOCTYPE html>
+   <html>
+   <head>
+       <link rel="stylesheet" href="http://localhost:8080/idp-widget/styles.css">
+   </head>
+   <body>
+       <div id="idp-widget"></div>
+       <script src="http://localhost:8080/idp-widget/idp-widget.js"></script>
+   </body>
+   </html>
+   ```
+
+2. **Configure the widget:**
+   ```javascript
+   // Configure the IdP Widget
+   window.idpWidgetConfig = {
+       apiBaseUrl: 'http://localhost:8080/api',
+       clientId: 'my-application-9f03ce9f',
+       clientSecret: 'ZXe0ePVSiJC6mQ5tq7HjFfOAK8bP64fI',
+       onSuccess: function(user, tokens) {
+           console.log('Authentication successful:', { user, tokens });
+           // Handle successful authentication
+       },
+       onError: function(error) {
+           console.error('Authentication failed:', error);
+           // Handle authentication errors
+       }
+   };
+
+   // Initialize the widget
+   const widget = new IdPWidget('idp-widget', window.idpWidgetConfig);
+   ```
+
+### Widget Features
+
+- **Login/Register Forms** with validation
+- **OAuth2 Social Login** (LinkedIn, Google)
+- **Password Reset** functionality
+- **Real-time Validation** with error feedback
+- **Responsive Design** for mobile and desktop
+- **Success/Error Modals** with user feedback
+
+### Widget Configuration Options
+
+| Option | Description | Required |
+|--------|-------------|----------|
+| `apiBaseUrl` | Base URL of the IdP API | Yes |
+| `clientId` | Your application's client ID | Yes |
+| `clientSecret` | Your application's client secret | Yes |
+| `onSuccess` | Callback for successful authentication | No |
+| `onError` | Callback for authentication errors | No |
+
 ## Integration Guide
 
 ### For Client Applications
@@ -168,16 +260,22 @@ Default OAuth2 client:
    - Add client credentials to `oauth_clients` table
    - Configure redirect URIs and scopes
 
-2. **Implement authentication flow:**
+2. **Use the IdP Widget (Recommended):**
+   - Include widget files in your application
+   - Configure with your client credentials
+   - Handle success/error callbacks
+
+3. **Or implement custom authentication flow:**
    ```javascript
-   // Redirect to IdP for authentication
-   window.location.href = 'http://localhost:8080/api/oauth2/linkedin/authorize?clientId=your-client-id';
-   
-   // Handle callback and extract tokens
-   // Verify tokens using public key from /.well-known/jwks.json
+   // Direct API integration
+   const response = await fetch('http://localhost:8080/api/auth/login', {
+       method: 'POST',
+       headers: { 'Content-Type': 'application/json' },
+       body: JSON.stringify({ email, password, clientId })
+   });
    ```
 
-3. **Verify JWT tokens:**
+4. **Verify JWT tokens:**
    ```bash
    # Get public keys
    curl http://localhost:8080/.well-known/jwks.json
@@ -220,14 +318,25 @@ All security events are logged:
 
 ### Project Structure
 ```
-src/main/java/com/example/idp/
-├── config/          # Spring configuration
-├── controller/      # REST controllers
-├── dto/            # Data transfer objects
-├── entity/         # JPA entities
-├── repository/     # Data repositories
-├── service/        # Business logic
-└── util/           # Utility classes
+idp-spring-boot/
+├── src/main/java/com/example/idp/
+│   ├── config/          # Spring configuration
+│   ├── controller/      # REST controllers
+│   ├── dto/            # Data transfer objects
+│   ├── entity/         # JPA entities
+│   ├── repository/     # Data repositories
+│   ├── service/        # Business logic
+│   └── util/           # Utility classes
+├── src/main/resources/
+│   ├── static/         # Static web resources
+│   └── application-exemplee.properties  # Configuration template
+├── idp-widget/         # JavaScript Widget
+│   ├── idp-widget.js   # Widget implementation
+│   ├── styles.css      # Widget styling
+│   ├── index.html      # Demo page
+│   └── demo.html       # Alternative demo
+├── school-budget-demo/ # Example integration
+└── docker-compose.yml  # Docker deployment
 ```
 
 ### Building
