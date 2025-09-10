@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Dashboard - Identity Provider</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .dashboard-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 15px;
+            padding: 20px 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .user-profile-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .profile-avatar-small {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .profile-avatar-small img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .user-name-header {
+            font-weight: 500;
+            color: #333;
+        }
+
+        .logout-btn {
+            background: #ff4757;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            background: #ff3742;
+            transform: translateY(-1px);
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 30px;
+        }
+
+        .profile-card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            height: fit-content;
+        }
+
+        .profile-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            color: white;
+            font-size: 48px;
+            font-weight: bold;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .profile-avatar img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .profile-name {
+            font-size: 28px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .profile-email {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .profile-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #e8f5e8;
+            color: #2d5a2d;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 30px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: #4CAF50;
+            border-radius: 50%;
+        }
+
+        .profile-details {
+            text-align: left;
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+
+        .detail-label {
+            font-weight: 500;
+            color: #555;
+        }
+
+        .detail-value {
+            color: #333;
+        }
+
+        .info-cards {
+            display: grid;
+            gap: 20px;
+        }
+
+        .info-card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        }
+
+        .card-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-icon {
+            width: 24px;
+            height: 24px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .card-icon svg {
+            width: 14px;
+            height: 14px;
+            fill: white;
+        }
+
+        .welcome-message {
+            font-size: 16px;
+            line-height: 1.6;
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .feature-list li {
+            padding: 8px 0;
+            color: #555;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .feature-list li::before {
+            content: "✓";
+            color: #4CAF50;
+            font-weight: bold;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .btn-secondary:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .header {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">Identity Provider</div>
+            <div class="user-profile-header">
+                <div class="profile-avatar-small" id="headerAvatar">
+                    <span id="headerInitials">U</span>
+                </div>
+                <span class="user-name-header" id="headerUserName">User Name</span>
+                <button class="logout-btn" onclick="logout()">Logout</button>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Profile Card -->
+            <div class="profile-card">
+                <div class="profile-avatar" id="profileAvatar">
+                    <span id="profileInitials">U</span>
+                </div>
+                <h2 class="profile-name" id="profileName">User Name</h2>
+                <p class="profile-email" id="profileEmail">user@example.com</p>
+                <div class="profile-status">
+                    <div class="status-dot"></div>
+                    <span>Email Verified</span>
+                </div>
+
+                <div class="profile-details">
+                    <div class="detail-row">
+                        <span class="detail-label">User ID</span>
+                        <span class="detail-value" id="userId">#12345</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Account Type</span>
+                        <span class="detail-value">Standard User</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Member Since</span>
+                        <span class="detail-value" id="memberSince">January 2024</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Last Login</span>
+                        <span class="detail-value" id="lastLogin">Today</span>
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="btn btn-primary" onclick="editProfile()">Edit Profile</button>
+                    <button class="btn btn-secondary" onclick="changePassword()">Change Password</button>
+                </div>
+            </div>
+
+            <!-- Info Cards -->
+            <div class="info-cards">
+                <div class="info-card">
+                    <h3 class="card-title">
+                        <div class="card-icon">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                            </svg>
+                        </div>
+                        Welcome to Your Dashboard
+                    </h3>
+                    <p class="welcome-message">
+                        Your account has been successfully verified and is now active. 
+                        You can now access all features of our Identity Provider service.
+                    </p>
+                    <ul class="feature-list">
+                        <li>Secure authentication with JWT tokens</li>
+                        <li>OAuth integration with LinkedIn and Google</li>
+                        <li>Profile management and customization</li>
+                        <li>Account security and privacy controls</li>
+                    </ul>
+                </div>
+
+                <div class="info-card">
+                    <h3 class="card-title">
+                        <div class="card-icon">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M12 1L3 5V11C3 16.55 6.84 21.74 12 23C17.16 21.74 21 16.55 21 11V5L12 1M10 17L6 13L7.41 11.59L10 14.17L16.59 7.58L18 9L10 17Z"/>
+                            </svg>
+                        </div>
+                        Account Security
+                    </h3>
+                    <p class="welcome-message">
+                        Your account is protected with industry-standard security measures.
+                    </p>
+                    <ul class="feature-list">
+                        <li>Email verification completed</li>
+                        <li>Secure password encryption</li>
+                        <li>Session management</li>
+                        <li>Login attempt monitoring</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Load user data when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            loadUserData();
+        });
+
+        async function loadUserData() {
+            try {
+                // Get user data from JWT token or API
+                const token = localStorage.getItem('accessToken');
+                if (!token) {
+                    window.location.href = '/login';
+                    return;
+                }
+
+                // Decode JWT token to get user info (simplified)
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                
+                // Update UI with user data
+                updateUserInterface({
+                    id: payload.sub,
+                    name: payload.name || 'User',
+                    email: payload.email || 'user@example.com',
+                    picture: payload.picture || null,
+                    emailVerified: payload.email_verified || false
+                });
+
+            } catch (error) {
+                console.error('Error loading user data:', error);
+                // Fallback to default values or redirect to login
+            }
+        }
+
+        function updateUserInterface(user) {
+            // Update profile information
+            document.getElementById('profileName').textContent = user.name;
+            document.getElementById('profileEmail').textContent = user.email;
+            document.getElementById('userId').textContent = `#${user.id}`;
+            document.getElementById('headerUserName').textContent = user.name;
+
+            // Update avatars
+            const initials = user.name.split(' ').map(n => n[0]).join('').toUpperCase();
+            
+            if (user.picture) {
+                document.getElementById('profileAvatar').innerHTML = `<img src="${user.picture}" alt="Profile Picture">`;
+                document.getElementById('headerAvatar').innerHTML = `<img src="${user.picture}" alt="Profile Picture">`;
+            } else {
+                document.getElementById('profileInitials').textContent = initials;
+                document.getElementById('headerInitials').textContent = initials;
+            }
+
+            // Update dates
+            const now = new Date();
+            document.getElementById('memberSince').textContent = now.toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'long' 
+            });
+            document.getElementById('lastLogin').textContent = 'Today';
+        }
+
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                // Clear tokens
+                localStorage.removeItem('accessToken');
+                localStorage.removeItem('refreshToken');
+                
+                // Redirect to login
+                window.location.href = '/login';
+            }
+        }
+
+        function editProfile() {
+            alert('Edit Profile functionality coming soon!');
+        }
+
+        function changePassword() {
+            alert('Change Password functionality coming soon!');
+        }
+    </script>
+</body>
+</html>

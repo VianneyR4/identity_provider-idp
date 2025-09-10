@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: idp-postgres
+    environment:
+      POSTGRES_DB: spring_db
+      POSTGRES_USER: vianney_r
+      POSTGRES_PASSWORD: root
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - idp-network
+
+  idp-service:
+    build: .
+    container_name: idp-service
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/spring_db
+      SPRING_DATASOURCE_USERNAME: vianney_r
+      SPRING_DATASOURCE_PASSWORD: root
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      APP_BASE_URL: http://localhost:8080
+    depends_on:
+      - postgres
+    networks:
+      - idp-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+
+networks:
+  idp-network:
+    driver: bridge

@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IdP Widget Demo</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .demo-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .demo-header {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+        
+        .demo-header h1 {
+            margin: 0 0 0.5rem 0;
+            font-size: 2rem;
+            font-weight: 600;
+        }
+        
+        .demo-header p {
+            margin: 0;
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+        
+        .demo-content {
+            padding: 2rem;
+        }
+        
+        .demo-section {
+            margin-bottom: 3rem;
+        }
+        
+        .demo-section h2 {
+            color: #1e293b;
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+        
+        .demo-buttons {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 2rem;
+        }
+        
+        .demo-btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .demo-btn-primary {
+            background: #2563eb;
+            color: white;
+        }
+        
+        .demo-btn-primary:hover {
+            background: #1d4ed8;
+        }
+        
+        .demo-btn-secondary {
+            background: #f1f5f9;
+            color: #475569;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .demo-btn-secondary:hover {
+            background: #e2e8f0;
+        }
+        
+        .demo-code {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 1.5rem;
+            border-radius: 8px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.875rem;
+            line-height: 1.6;
+            overflow-x: auto;
+            margin: 1rem 0;
+        }
+        
+        .demo-code .comment {
+            color: #94a3b8;
+        }
+        
+        .demo-code .string {
+            color: #10b981;
+        }
+        
+        .demo-code .keyword {
+            color: #3b82f6;
+        }
+        
+        .demo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+        
+        .demo-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 1.5rem;
+        }
+        
+        .demo-card h3 {
+            margin: 0 0 1rem 0;
+            color: #1e293b;
+            font-size: 1.25rem;
+        }
+        
+        .demo-card p {
+            margin: 0 0 1rem 0;
+            color: #64748b;
+            line-height: 1.6;
+        }
+        
+        .user-info {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+            display: none;
+        }
+        
+        .user-info.show {
+            display: block;
+        }
+        
+        .user-info h3 {
+            margin: 0 0 0.5rem 0;
+            color: #166534;
+        }
+        
+        .user-info pre {
+            background: white;
+            padding: 1rem;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 0.875rem;
+            margin: 0;
+        }
+        
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        
+        .status-indicator.authenticated {
+            background: #dcfce7;
+            color: #166534;
+        }
+        
+        .status-indicator.unauthenticated {
+            background: #fef2f2;
+            color: #991b1b;
+        }
+        
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-container">
+        <div class="demo-header">
+            <h1>Identity Provider Widget</h1>
+            <p>Lightweight authentication widget for seamless integration</p>
+        </div>
+        
+        <div class="demo-content">
+            <!-- Status Section -->
+            <div class="demo-section">
+                <h2>Authentication Status</h2>
+                <div id="auth-status" class="status-indicator unauthenticated">
+                    <div class="status-dot"></div>
+                    <span>Not Authenticated</span>
+                </div>
+                
+                <div id="user-info" class="user-info">
+                    <h3>User Information</h3>
+                    <pre id="user-data"></pre>
+                </div>
+            </div>
+            
+            <!-- Demo Actions -->
+            <div class="demo-section">
+                <h2>Try the Widget</h2>
+                <div class="demo-buttons">
+                    <button class="demo-btn demo-btn-primary" onclick="showModal('login')">
+                        🔑 Show Login
+                    </button>
+                    <button class="demo-btn demo-btn-primary" onclick="showModal('register')">
+                        👤 Show Register
+                    </button>
+                    <button class="demo-btn demo-btn-secondary" onclick="logout()">
+                        🚪 Logout
+                    </button>
+                    <button class="demo-btn demo-btn-secondary" onclick="refreshStatus()">
+                        🔄 Refresh Status
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Integration Examples -->
+            <div class="demo-section">
+                <h2>Integration Examples</h2>
+                
+                <div class="demo-grid">
+                    <div class="demo-card">
+                        <h3>Simple Integration</h3>
+                        <p>Add authentication to any website with just a few lines of code:</p>
+                        <div class="demo-code">
+<span class="comment"><!-- Include the widget --></span>
+<span class="keyword">&lt;script</span> <span class="string">src="https://your-cdn.com/idp-widget/idp-widget.js"</span><span class="keyword">&gt;&lt;/script&gt;</span>
+
+<span class="comment"><!-- Add widget container --></span>
+<span class="keyword">&lt;div</span> <span class="string">id="idp-widget"</span><span class="keyword">&gt;&lt;/div&gt;</span>
+
+<span class="comment"><!-- Initialize the widget --></span>
+<span class="keyword">&lt;script&gt;</span>
+<span class="keyword">const</span> widget = <span class="keyword">new</span> IdPWidget({
+  containerId: <span class="string">'idp-widget'</span>,
+  apiBaseUrl: <span class="string">'https://your-idp.com/api'</span>,
+  clientId: <span class="string">'your-client-id'</span>,
+  onSuccess: (user, tokens) => {
+    <span class="comment">// Handle successful authentication</span>
+    console.log(<span class="string">'User logged in:'</span>, user);
+  },
+  onError: (error) => {
+    <span class="comment">// Handle authentication errors</span>
+    console.error(<span class="string">'Auth error:'</span>, error);
+  }
+});
+<span class="keyword">&lt;/script&gt;</span>
+                        </div>
+                    </div>
+                    
+                    <div class="demo-card">
+                        <h3>Custom Integration</h3>
+                        <p>Full control with JavaScript API:</p>
+                        <div class="demo-code">
+<span class="keyword">const</span> widget = <span class="keyword">new</span> IdPWidget({
+  containerId: <span class="string">'idp-widget'</span>,
+  apiBaseUrl: <span class="string">'https://your-idp.com/api'</span>,
+  clientId: <span class="string">'your-client-id'</span>,
+  onSuccess: (user, tokens) => {
+    <span class="comment">// Handle successful authentication</span>
+    console.log(<span class="string">'User logged in:'</span>, user);
+    <span class="comment">// Store tokens, redirect, etc.</span>
+    localStorage.setItem(<span class="string">'accessToken'</span>, tokens.accessToken);
+    localStorage.setItem(<span class="string">'refreshToken'</span>, tokens.refreshToken);
+  },
+  onError: (error) => {
+    <span class="comment">// Handle authentication errors</span>
+    console.error(<span class="string">'Auth error:'</span>, error);
+    <span class="comment">// Show user-friendly error message</span>
+    alert(<span class="string">'Login failed: '</span> + error.message);
+  }
+});
+
+<span class="comment">// Show specific views</span>
+widget.showView(<span class="string">'login'</span>);
+widget.showView(<span class="string">'register'</span>);
+                        </div>
+                    </div>
+                    
+                    <div class="demo-card">
+                        <h3>React Integration</h3>
+                        <p>Easy integration with React applications:</p>
+                        <div class="demo-code">
+<span class="keyword">import</span> { useEffect, useState, useRef } from <span class="string">'react'</span>;
+
+<span class="keyword">function</span> AuthWidget() {
+  <span class="keyword">const</span> [user, setUser] = useState(<span class="keyword">null</span>);
+  <span class="keyword">const</span> [tokens, setTokens] = useState(<span class="keyword">null</span>);
+  <span class="keyword">const</span> widgetRef = useRef(<span class="keyword">null</span>);
+  <span class="keyword">const</span> containerRef = useRef(<span class="keyword">null</span>);
+  
+  useEffect(() => {
+    <span class="keyword">if</span> (containerRef.current && !widgetRef.current) {
+      widgetRef.current = <span class="keyword">new</span> IdPWidget({
+        containerId: containerRef.current.id,
+        apiBaseUrl: process.env.REACT_APP_IDP_URL,
+        clientId: process.env.REACT_APP_CLIENT_ID,
+        onSuccess: (user, tokens) => {
+          <span class="comment">// Update React state</span>
+          setUser(user);
+          setTokens(tokens);
+        },
+        onError: (error) => {
+          console.error(<span class="string">'Auth error:'</span>, error);
+        }
+      });
+    }
+  }, []);
+  
+  <span class="keyword">return</span> (
+    <span class="keyword">&lt;div&gt;</span>
+      <span class="keyword">&lt;div</span> <span class="string">ref={containerRef}</span> <span class="string">id="react-idp-widget"</span><span class="keyword">&gt;&lt;/div&gt;</span>
+      {user && <span class="keyword">&lt;p&gt;</span>Welcome, {user.email}!<span class="keyword">&lt;/p&gt;</span>}
+    <span class="keyword">&lt;/div&gt;</span>
+  );
+}
+                        </div>
+                    </div>
+                    
+                    <div class="demo-card">
+                        <h3>Vue.js Integration</h3>
+                        <p>Seamless Vue.js integration:</p>
+                        <div class="demo-code">
+<span class="keyword">&lt;template&gt;</span>
+  <span class="keyword">&lt;div&gt;</span>
+    <span class="keyword">&lt;div</span> <span class="string">ref="widgetContainer"</span> <span class="string">id="vue-idp-widget"</span><span class="keyword">&gt;&lt;/div&gt;</span>
+    <span class="keyword">&lt;p</span> <span class="string">v-if="user"</span><span class="keyword">&gt;</span>Welcome, {{ user.email }}!<span class="keyword">&lt;/p&gt;</span>
+  <span class="keyword">&lt;/div&gt;</span>
+<span class="keyword">&lt;/template&gt;</span>
+
+<span class="keyword">&lt;script&gt;</span>
+<span class="keyword">export default</span> {
+  data() {
+    <span class="keyword">return</span> {
+      widget: <span class="keyword">null</span>,
+      user: <span class="keyword">null</span>,
+      tokens: <span class="keyword">null</span>
+    };
+  },
+  mounted() {
+    <span class="keyword">this</span>.widget = <span class="keyword">new</span> IdPWidget({
+      containerId: <span class="string">'vue-idp-widget'</span>,
+      apiBaseUrl: process.env.VUE_APP_IDP_URL,
+      clientId: process.env.VUE_APP_CLIENT_ID,
+      onSuccess: (user, tokens) => {
+        <span class="keyword">this</span>.user = user;
+        <span class="keyword">this</span>.tokens = tokens;
+        <span class="keyword">this</span>.$emit(<span class="string">'authenticated'</span>, { user, tokens });
+      },
+      onError: (error) => {
+        console.error(<span class="string">'Auth error:'</span>, error);
+      }
+    });
+  },
+  methods: {
+    showLogin() {
+      <span class="keyword">this</span>.widget.showView(<span class="string">'login'</span>);
+    },
+    showRegister() {
+      <span class="keyword">this</span>.widget.showView(<span class="string">'register'</span>);
+    }
+  }
+};
+<span class="keyword">&lt;/script&gt;</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Features -->
+            <div class="demo-section">
+                <h2>Features</h2>
+                <div class="demo-grid">
+                    <div class="demo-card">
+                        <h3>🔐 Secure Authentication</h3>
+                        <p>JWT tokens with RSA-256 signing, refresh token rotation, and secure token storage.</p>
+                    </div>
+                    <div class="demo-card">
+                        <h3>🎨 Customizable UI</h3>
+                        <p>Modern, responsive design with theme support and CSS custom properties.</p>
+                    </div>
+                    <div class="demo-card">
+                        <h3>🔗 OAuth Integration</h3>
+                        <p>Built-in LinkedIn OAuth2 support with extensible provider architecture.</p>
+                    </div>
+                    <div class="demo-card">
+                        <h3>📱 Mobile Ready</h3>
+                        <p>Responsive design that works perfectly on desktop, tablet, and mobile devices.</p>
+                    </div>
+                    <div class="demo-card">
+                        <h3>♿ Accessible</h3>
+                        <p>WCAG compliant with keyboard navigation, screen reader support, and focus management.</p>
+                    </div>
+                    <div class="demo-card">
+                        <h3>🚀 Easy Integration</h3>
+                        <p>Drop-in widget with minimal configuration. Works with any framework or vanilla JS.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Widget Integration -->
+    <script>
+        // Configure the widget
+        window.idpIntegrationConfig = {
+            apiBaseUrl: 'http://localhost:8080/api',
+            clientId: 'demo-app',
+            clientSecret: 'demo-secret',
+            modal: true,
+            autoClose: true,
+            onSuccess: function(user, tokens) {
+                console.log('Authentication successful:', { user, tokens });
+                updateAuthStatus(true, user, tokens);
+            },
+            onError: function(error) {
+                console.error('Authentication error:', error);
+                alert('Authentication failed: ' + error.message);
+            },
+            onClose: function() {
+                console.log('Widget closed');
+            }
+        };
+    </script>
+    
+    <!-- Load IdP widget script -->
+    <script src="idp-widget.js"></script>
+    
+    <!-- Demo functionality -->
+    <script>
+        function updateAuthStatus(authenticated, user = null, tokens = null) {
+            const statusElement = document.getElementById('auth-status');
+            const userInfoElement = document.getElementById('user-info');
+            const userDataElement = document.getElementById('user-data');
+            
+            if (authenticated && user) {
+                statusElement.className = 'status-indicator authenticated';
+                statusElement.innerHTML = '<div class="status-dot"></div><span>Authenticated as ' + user.email + '</span>';
+                
+                userInfoElement.classList.add('show');
+                userDataElement.textContent = JSON.stringify({
+                    user: user,
+                    tokens: tokens ? {
+                        accessToken: tokens.accessToken.substring(0, 20) + '...',
+                        refreshToken: tokens.refreshToken.substring(0, 20) + '...'
+                    } : null
+                }, null, 2);
+            } else {
+                statusElement.className = 'status-indicator unauthenticated';
+                statusElement.innerHTML = '<div class="status-dot"></div><span>Not Authenticated</span>';
+                userInfoElement.classList.remove('show');
+            }
+        }
+        
+        // Initialize IdP Widget
+        let idpWidget = null;
+        
+        function initializeWidget() {
+            idpWidget = new IdPWidget({
+                containerId: 'idp-widget-container',
+                apiBaseUrl: 'http://localhost:8080/api',
+                clientId: 'demo-app',
+                onSuccess: function(user, tokens) {
+                    console.log('Authentication successful:', { user, tokens });
+                    updateAuthStatus(true, user, tokens);
+                    closeModal();
+                },
+                onError: function(error) {
+                    console.error('Authentication error:', error);
+                    alert('Authentication failed: ' + error.message);
+                },
+                autoInit: false
+            });
+        }
+        
+        function showModal(view = 'login') {
+            const modal = document.getElementById('idp-modal');
+            if (!modal) {
+                createModal();
+            }
+            
+            if (!idpWidget) {
+                initializeWidget();
+            }
+            
+            idpWidget.render();
+            idpWidget.showView(view);
+            document.getElementById('idp-modal').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closeModal() {
+            const modal = document.getElementById('idp-modal');
+            if (modal) {
+                modal.style.display = 'none';
+                document.body.style.overflow = '';
+            }
+        }
+        
+        function createModal() {
+            const modal = document.createElement('div');
+            modal.id = 'idp-modal';
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.5);
+                display: none;
+                justify-content: center;
+                align-items: center;
+                z-index: 10000;
+                backdrop-filter: blur(4px);
+            `;
+            
+            const container = document.createElement('div');
+            container.style.cssText = `
+                position: relative;
+                background: white;
+                border-radius: 12px;
+                box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+                max-width: 90vw;
+                max-height: 90vh;
+                overflow: auto;
+            `;
+            
+            const closeButton = document.createElement('button');
+            closeButton.innerHTML = '×';
+            closeButton.style.cssText = `
+                position: absolute;
+                top: -10px;
+                right: -10px;
+                width: 32px;
+                height: 32px;
+                border: none;
+                border-radius: 50%;
+                background: white;
+                color: #666;
+                font-size: 20px;
+                font-weight: bold;
+                cursor: pointer;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+                z-index: 1;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            `;
+            
+            closeButton.addEventListener('click', closeModal);
+            
+            const widgetContainer = document.createElement('div');
+            widgetContainer.id = 'idp-widget-container';
+            
+            container.appendChild(closeButton);
+            container.appendChild(widgetContainer);
+            modal.appendChild(container);
+            document.body.appendChild(modal);
+            
+            // Close on overlay click
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    closeModal();
+                }
+            });
+            
+            // Close on escape key
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && modal.style.display === 'flex') {
+                    closeModal();
+                }
+            });
+        }
+        
+        function logout() {
+            if (idpWidget) {
+                idpWidget.logout();
+            }
+            updateAuthStatus(false);
+        }
+        
+        function refreshStatus() {
+            if (idpWidget) {
+                const user = idpWidget.getUser();
+                const tokens = idpWidget.getTokens();
+                const authenticated = idpWidget.isAuthenticated();
+                
+                updateAuthStatus(authenticated, user, tokens);
+            }
+        }
+        
+        // Check initial auth status
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeWidget();
+            setTimeout(refreshStatus, 500);
+        });
+    </script>
+</body>
+</html>

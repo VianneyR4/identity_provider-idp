@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IdP Widget Registration Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .widget-container {
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>IdP Widget Registration Error Handling Test</h1>
+    
+    <div class="test-section">
+        <h2>Test Registration with Error Handling</h2>
+        <p>This widget is configured to connect to the Spring Boot backend at localhost:8080</p>
+        
+        <div class="widget-container">
+            <div id="idp-widget"></div>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test Scenarios</h2>
+        <ul>
+            <li><strong>Validation Errors:</strong> Try submitting with empty fields or invalid email format</li>
+            <li><strong>Weak Password:</strong> Try a simple password like "123"</li>
+            <li><strong>Duplicate Email:</strong> Register the same email twice</li>
+            <li><strong>Password Mismatch:</strong> Enter different passwords in password and confirm fields</li>
+        </ul>
+    </div>
+
+    <script>
+        // Inline a minimal version of the IdP widget for testing
+        class IdPWidget {
+            constructor(config = {}) {
+                this.config = {
+                    apiBaseUrl: config.apiBaseUrl || 'http://localhost:8080/api',
+                    clientId: config.clientId || 'demo-app',
+                    containerId: config.containerId || 'idp-widget',
+                    onSuccess: config.onSuccess || (() => {}),
+                    onError: config.onError || (() => {})
+                };
+                this.elements = {};
+                this.render();
+            }
+
+            render() {
+                const container = document.getElementById(this.config.containerId);
+                if (!container) return;
+
+                container.innerHTML = `
+                    <div style="max-width: 400px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
+                        <h3>Register</h3>
+                        <form id="register-form">
+                            <div style="margin-bottom: 15px;">
+                                <label>First Name:</label>
+                                <input type="text" id="register-firstName" style="width: 100%; padding: 8px; margin-top: 5px;">
+                                <div id="register-firstName-error" style="display: none; color: #dc3545; font-size: 0.875rem; margin-top: 0.25rem;"></div>
+                            </div>
+                            <div style="margin-bottom: 15px;">
+                                <label>Last Name:</label>
+                                <input type="text" id="register-lastName" style="width: 100%; padding: 8px; margin-top: 5px;">
+                                <div id="register-lastName-error" style="display: none; color: #dc3545; font-size: 0.875rem; margin-top: 0.25rem;"></div>
+                            </div>
+                            <div style="margin-bottom: 15px;">
+                                <label>Email:</label>
+                                <input type="email" id="register-email" style="width: 100%; padding: 8px; margin-top: 5px;">
+                                <div id="register-email-error" style="display: none; color: #dc3545; font-size: 0.875rem; margin-top: 0.25rem;"></div>
+                            </div>
+                            <div style="margin-bottom: 15px;">
+                                <label>Password:</label>
+                                <input type="password" id="register-password" style="width: 100%; padding: 8px; margin-top: 5px;">
+                                <div id="register-password-error" style="display: none; color: #dc3545; font-size: 0.875rem; margin-top: 0.25rem;"></div>
+                            </div>
+                            <div style="margin-bottom: 15px;">
+                                <label>Confirm Password:</label>
+                                <input type="password" id="register-confirmPassword" style="width: 100%; padding: 8px; margin-top: 5px;">
+                                <div id="register-confirmPassword-error" style="display: none; color: #dc3545; font-size: 0.875rem; margin-top: 0.25rem;"></div>
+                            </div>
+                            <div id="register-error" style="display: none; color: #dc3545; margin-bottom: 15px; padding: 10px; background: #f8d7da; border: 1px solid #f5c6cb; border-radius: 4px;"></div>
+                            <div id="register-success" style="display: none; color: #155724; margin-bottom: 15px; padding: 10px; background: #d4edda; border: 1px solid #c3e6cb; border-radius: 4px;"></div>
+                            <button type="submit" id="register-btn" style="width: 100%; padding: 10px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">Register</button>
+                        </form>
+                    </div>
+                `;
+
+                this.bindEvents();
+            }
+
+            bindEvents() {
+                const form = document.getElementById('register-form');
+                if (form) {
+                    form.addEventListener('submit', (e) => this.handleRegister(e));
+                }
+            }
+
+            async handleRegister(event) {
+                event.preventDefault();
+                
+                const formData = {
+                    firstName: document.getElementById('register-firstName')?.value?.trim() || '',
+                    lastName: document.getElementById('register-lastName')?.value?.trim() || '',
+                    email: document.getElementById('register-email')?.value?.trim() || '',
+                    password: document.getElementById('register-password')?.value || '',
+                    confirmPassword: document.getElementById('register-confirmPassword')?.value || ''
+                };
+
+                // Clear previous errors
+                this.clearErrors();
+
+                // Client-side validation
+                if (!this.validateRegisterForm(formData)) return;
+
+                // Set loading state
+                const btn = document.getElementById('register-btn');
+                btn.textContent = 'Registering...';
+                btn.disabled = true;
+
+                try {
+                    const response = await fetch(this.config.apiBaseUrl + '/auth/register', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            firstName: formData.firstName,
+                            lastName: formData.lastName,
+                            email: formData.email,
+                            password: formData.password,
+                            clientId: this.config.clientId
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        this.showSuccess('Account Created Successfully!', 'Welcome! Your account has been created. Please check your email to verify your account, then you can sign in.');
+                    } else {
+                        this.handleRegistrationError(data);
+                    }
+                } catch (error) {
+                    console.error('Registration error:', error);
+                    this.handleRegistrationError({ message: 'Network error. Please try again.' });
+                } finally {
+                    btn.textContent = 'Register';
+                    btn.disabled = false;
+                }
+            }
+
+            validateRegisterForm(formData) {
+                let isValid = true;
+
+                if (!formData.firstName) {
+                    this.showFieldError('register-firstName-error', 'First name is required');
+                    isValid = false;
+                }
+
+                if (!formData.lastName) {
+                    this.showFieldError('register-lastName-error', 'Last name is required');
+                    isValid = false;
+                }
+
+                if (!formData.email) {
+                    this.showFieldError('register-email-error', 'Email is required');
+                    isValid = false;
+                } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+                    this.showFieldError('register-email-error', 'Please enter a valid email address');
+                    isValid = false;
+                }
+
+                if (!formData.password) {
+                    this.showFieldError('register-password-error', 'Password is required');
+                    isValid = false;
+                } else if (formData.password.length < 6) {
+                    this.showFieldError('register-password-error', 'Password must be at least 6 characters long');
+                    isValid = false;
+                }
+
+                if (formData.password !== formData.confirmPassword) {
+                    this.showFieldError('register-confirmPassword-error', 'Passwords do not match');
+                    isValid = false;
+                }
+
+                return isValid;
+            }
+
+            handleRegistrationError(errorResponse) {
+                this.clearErrors();
+
+                if (errorResponse.errors) {
+                    // Handle field-specific validation errors
+                    Object.keys(errorResponse.errors).forEach(field => {
+                        const errorMessage = errorResponse.errors[field];
+                        const fieldMappings = {
+                            'password': 'password',
+                            'email': 'email',
+                            'firstname': 'firstName',
+                            'lastname': 'lastName'
+                        };
+                        const actualField = fieldMappings[field.toLowerCase()] || field;
+                        const actualErrorElementId = `register-${actualField}-error`;
+                        this.showFieldError(actualErrorElementId, errorMessage);
+                    });
+
+                    if (Object.keys(errorResponse.errors).length > 0) {
+                        this.showError('register-error', 'Please fix the errors below and try again.');
+                    }
+                } else if (errorResponse.error) {
+                    this.showError('register-error', errorResponse.error);
+                } else if (errorResponse.message) {
+                    this.showError('register-error', errorResponse.message);
+                } else {
+                    this.showError('register-error', 'Registration failed. Please try again.');
+                }
+
+                // Handle special error codes
+                if (errorResponse.code === 'EMAIL_ALREADY_EXISTS') {
+                    this.showFieldError('register-email-error', 'This email is already registered. Please use a different email or try signing in.');
+                }
+
+                if (errorResponse.code === 'WEAK_PASSWORD') {
+                    this.showFieldError('register-password-error', 'Password is too weak. Please use a stronger password.');
+                }
+            }
+
+            showFieldError(elementId, message) {
+                const errorElement = document.getElementById(elementId);
+                if (errorElement) {
+                    errorElement.textContent = message;
+                    errorElement.style.display = 'block';
+                    
+                    const fieldId = elementId.replace('-error', '');
+                    const fieldElement = document.getElementById(fieldId);
+                    if (fieldElement) {
+                        fieldElement.style.borderColor = '#dc3545';
+                        fieldElement.addEventListener('input', function clearError() {
+                            fieldElement.style.borderColor = '';
+                            errorElement.style.display = 'none';
+                            fieldElement.removeEventListener('input', clearError);
+                        }, { once: true });
+                    }
+                }
+            }
+
+            showError(elementId, message) {
+                const errorElement = document.getElementById(elementId);
+                if (errorElement) {
+                    errorElement.textContent = message;
+                    errorElement.style.display = 'block';
+                }
+            }
+
+            showSuccess(title, message) {
+                const successElement = document.getElementById('register-success');
+                if (successElement) {
+                    successElement.innerHTML = `<strong>${title}</strong><br>${message}`;
+                    successElement.style.display = 'block';
+                }
+            }
+
+            clearErrors() {
+                const errorElements = document.querySelectorAll('[id$="-error"]');
+                errorElements.forEach(element => {
+                    element.style.display = 'none';
+                    element.textContent = '';
+                });
+
+                const fieldElements = document.querySelectorAll('input');
+                fieldElements.forEach(element => {
+                    element.style.borderColor = '';
+                });
+
+                const generalError = document.getElementById('register-error');
+                if (generalError) {
+                    generalError.style.display = 'none';
+                }
+
+                const successElement = document.getElementById('register-success');
+                if (successElement) {
+                    successElement.style.display = 'none';
+                }
+            }
+        }
+    </script>
+    <script>
+        // Initialize the IdP widget
+        const widget = new IdPWidget({
+            containerId: 'idp-widget',
+            apiBaseUrl: 'http://localhost:8080/api',
+            clientId: 'test-client-id',
+            onSuccess: (user, tokens) => {
+                console.log('Authentication successful:', user, tokens);
+                alert('Authentication successful! Check console for details.');
+            },
+            onError: (error) => {
+                console.error('Authentication error:', error);
+                alert('Authentication error: ' + error.message);
+            }
+        });
+
+        // Start with registration form visible
+        widget.render();
+    </script>
+</body>
+</html>
