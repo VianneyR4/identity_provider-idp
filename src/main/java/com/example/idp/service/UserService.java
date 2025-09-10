@@ -27,7 +27,7 @@ public class UserService {
     private final AuditService auditService;
     
     @Transactional
-    public User registerUser(String email, String password, String firstName, String lastName) {
+    public User registerUser(String email, String password, String firstName, String lastName, String role) {
         // Check if user already exists
         if (userRepository.existsByEmail(email)) {
             throw new RuntimeException("User with email " + email + " already exists");
@@ -47,10 +47,11 @@ public class UserService {
         
         user = userRepository.saveAndFlush(user);
         
-        // Assign default USER role
+        // Assign role (default to USER if not provided)
+        String assignedRole = (role != null && !role.trim().isEmpty()) ? role.trim().toUpperCase() : "USER";
         UserRole userRole = UserRole.builder()
                 .user(user)
-                .role("USER")
+                .role(assignedRole)
                 .build();
         userRoleRepository.save(userRole);
         

@@ -22,9 +22,8 @@ A comprehensive Identity Provider solution featuring a Spring Boot backend and J
 ### Security Features
 - **Rate Limiting** on login attempts
 - **Account Lockout** after failed attempts
-- **Audit Logging** for security events
 - **Client Registration** for OAuth2 applications
-- **Role-Based Access Control** (Admin, User, Department Head, Teacher)
+- **Role-Based Access Control** (ADMIN, USER, DEPARTMENT_HEAD, TEACHER)
 
 ### API Endpoints
 
@@ -108,12 +107,12 @@ A comprehensive Identity Provider solution featuring a Spring Boot backend and J
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `SPRING_DATASOURCE_URL` | Database URL | `jdbc:postgresql://localhost:5432/spring_db` |
-| `SPRING_DATASOURCE_USERNAME` | Database username | `vianney_r` |
-| `SPRING_DATASOURCE_PASSWORD` | Database password | `root` |
+| `SPRING_DATASOURCE_URL` | Database URL | `jdbc:postgresql://localhost:5432/{your-database-name}` |
+| `SPRING_DATASOURCE_USERNAME` | Database username | `{your-database-username}` |
+| `SPRING_DATASOURCE_PASSWORD` | Database password | `{your-database-password}` |
 | `SPRING_MAIL_HOST` | SMTP host | `smtp.gmail.com` |
-| `SPRING_MAIL_USERNAME` | Email username | - |
-| `SPRING_MAIL_PASSWORD` | Email password | - |
+| `SPRING_MAIL_USERNAME` | Email username | `{your-email-username}` |
+| `SPRING_MAIL_PASSWORD` | Email password | `{your-email-password}` |
 | `APP_BASE_URL` | Base URL for emails | `http://localhost:8080` |
 
 ### OAuth2 Configuration
@@ -138,19 +137,19 @@ spring.security.oauth2.client.registration.google.scope=openid,profile,email
 spring.security.oauth2.client.registration.google.redirect-uri=http://localhost:8080/login/oauth2/code/google
 ```
 
-**Note:** The application uses a client ID mapping system. Your widget's client ID (e.g., `my-application-9f03ce9f`) is mapped to the actual OAuth2 provider credentials in the backend.
+**Note:** The application uses a client ID mapping system that you can retrieve from an API endpoint `/api/oauth2/clients` with parameter body `{"clientName": "My Application"}`.
+That's the way it's like you register your application to use our IdP service and the response body will contain the client ID. Your widget's client ID (e.g., `my-application-9f03ce9f`) is mapped to the actual OAuth2 provider credentials in the backend.
 
 ## Database Schema
 
-The application automatically creates the following tables:
+The application automatically creates the following tables `make sure to have a created and run your postgresql database before running the application`:
 - `users` - User accounts and profile information
 - `user_roles` - Role assignments (Admin, User, Department Head, Teacher)
 - `oauth_clients` - Registered client applications
 - `refresh_tokens` - Active refresh tokens
 - `login_attempts` - Failed login tracking
-- `audit_logs` - Security event logging
 
-## Sample Data
+<!-- ## Sample Data
 
 Default users created on startup:
 - **Admin**: `admin@example.com` / `admin123`
@@ -160,7 +159,7 @@ Default users created on startup:
 
 Default OAuth2 client:
 - **Client ID**: `demo-app-client`
-- **Client Secret**: `secret` (BCrypt hashed)
+- **Client Secret**: `secret` (BCrypt hashed) -->
 
 ## JWT Token Structure
 
@@ -214,23 +213,25 @@ The IdP widget provides a complete authentication UI that can be easily integrat
 
 2. **Configure the widget:**
    ```javascript
-   // Configure the IdP Widget
-   window.idpWidgetConfig = {
-       apiBaseUrl: 'http://localhost:8080/api',
-       clientId: 'my-application-9f03ce9f',
-       clientSecret: 'ZXe0ePVSiJC6mQ5tq7HjFfOAK8bP64fI',
-       onSuccess: function(user, tokens) {
-           console.log('Authentication successful:', { user, tokens });
-           // Handle successful authentication
-       },
-       onError: function(error) {
-           console.error('Authentication failed:', error);
-           // Handle authentication errors
-       }
-   };
+   <script>
+      // Configure the IdP Widget
+      window.idpWidgetConfig = {
+         apiBaseUrl: 'http://localhost:8080/api',
+         clientId: '{your-widget-client-id}', // The client ID you get from the /api/oauth2/clients endpoint
+         clientSecret: '{your-widget-client-secret}', // The client secret you get from the /api/oauth2/clients endpoint
+         onSuccess: function(user, tokens) {
+            console.log('Authentication successful:', { user, tokens });
+            // Handle successful authentication
+         },
+         onError: function(error) {
+            console.error('Authentication failed:', error);
+            // Handle authentication errors
+         }
+      };
 
-   // Initialize the widget
-   const widget = new IdPWidget('idp-widget', window.idpWidgetConfig);
+      // Initialize the widget
+      const widget = new IdPWidget('idp-widget', window.idpWidgetConfig);
+   </script>
    ```
 
 ### Widget Features
@@ -257,11 +258,11 @@ The IdP widget provides a complete authentication UI that can be easily integrat
 ### For Client Applications
 
 1. **Register your application:**
-   - Add client credentials to `oauth_clients` table
-   - Configure redirect URIs and scopes
+   - using the endpoint `/api/oauth2/clients` with parameter body `{"clientName": "{your-desired-app-name}"}`
+   - Configure redirect URIs and scopes all arecoming from the request body
 
 2. **Use the IdP Widget (Recommended):**
-   - Include widget files in your application
+   - Include the idp-widget in your application
    - Configure with your client credentials
    - Handle success/error callbacks
 
@@ -271,7 +272,7 @@ The IdP widget provides a complete authentication UI that can be easily integrat
    const response = await fetch('http://localhost:8080/api/auth/login', {
        method: 'POST',
        headers: { 'Content-Type': 'application/json' },
-       body: JSON.stringify({ email, password, clientId })
+       body: JSON.stringify({ email, password, clientId }) // clientId is the client id you get from the /api/oauth2/clients endpoint
    });
    ```
 
@@ -333,8 +334,7 @@ idp-spring-boot/
 ├── idp-widget/         # JavaScript Widget
 │   ├── idp-widget.js   # Widget implementation
 │   ├── styles.css      # Widget styling
-│   ├── index.html      # Demo page
-│   └── demo.html       # Alternative demo
+│   └── index.html      # Demo page
 ├── school-budget-demo/ # Example integration
 └── docker-compose.yml  # Docker deployment
 ```

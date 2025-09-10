@@ -36,7 +36,8 @@ public class AuthController {
                 request.getEmail(),
                 request.getPassword(),
                 request.getFirstName(),
-                request.getLastName()
+                request.getLastName(),
+                request.getRole()
             );
             
             // For registration, we don't immediately authenticate

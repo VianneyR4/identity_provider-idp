@@ -26,4 +26,7 @@ public class RegisterRequest {
     
     @NotBlank(message = "Client ID is required")
     private String clientId;
+    
+    // Optional role field - defaults to "USER" if not provided
+    private String role;
 }
